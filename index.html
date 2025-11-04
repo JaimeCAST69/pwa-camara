@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <link rel="manifest" href="manifest.json">
+    <title>Cámara PWA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        #cameraContainer {
+            display: none;
+            margin: 20px 0;
+        }
+        #video, #canvas {
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cámara PWA</h1>
+    
+    <!-- Botón para abrir la cámara -->
+    <button id="openCamera">Abrir Cámara</button>
+    
+    <!-- Contenedor de la cámara -->
+    <div id="cameraContainer">
+        <video id="video" autoplay playsinline></video>
+        <button id="takePhoto">Tomar Foto</button>
+        <canvas id="canvas" style="display:none;"></canvas>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Registrar el Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado:', registration);
+                    })
+                    .catch(error => {
+                        console.error('Error al registrar el Service Worker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

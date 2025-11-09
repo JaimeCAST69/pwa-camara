@@ -40,8 +40,8 @@ async function startCamera(facingMode) {
     const constraints = {
         video: {
             facingMode: { ideal: facingMode },
-            width: { ideal: 320 },
-            height: { ideal: 240 }
+            width: { ideal: 1280, min: 640 },
+            height: { ideal: 720, min: 480 }
         }
     };
 
@@ -55,9 +55,20 @@ function takePhoto() {
         return;
     }
 
+    // Configurar canvas con alta resolución
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+    
+    // Mejorar calidad de renderizado
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageDataURL = canvas.toDataURL('image/png');
+    
+    // Capturar con mejor calidad (JPEG con alta calidad)
+    const imageDataURL = canvas.toDataURL('image/jpeg', 0.95);
     console.log('Foto capturada en base64:', imageDataURL);
+    console.log('Resolución:', canvas.width, 'x', canvas.height);
     console.log('Longitud del string:', imageDataURL.length, 'caracteres');
     
     // Agregar la foto a la galería

@@ -7,8 +7,14 @@ const switchCameraBtn = document.getElementById('switchCamera');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
+// Referencias para la galería
+const gallery = document.getElementById('gallery');
+const photoCount = document.getElementById('photoCount');
+const clearGalleryBtn = document.getElementById('clearGallery');
+
 let stream = null;
 let currentFacingMode = 'environment'; // 'environment' para trasera, 'user' para frontal
+let photoStorage = []; // Array para almacenar las fotos
 
 async function openCamera() {
     try {
@@ -53,6 +59,9 @@ function takePhoto() {
     const imageDataURL = canvas.toDataURL('image/png');
     console.log('Foto capturada en base64:', imageDataURL);
     console.log('Longitud del string:', imageDataURL.length, 'caracteres');
+    
+    // Agregar la foto a la galería
+    addPhotoToGallery(imageDataURL);
     
     closeCamera();
 }
@@ -100,6 +109,107 @@ function closeCamera() {
 openCameraBtn.addEventListener('click', openCamera);
 takePhotoBtn.addEventListener('click', takePhoto);
 switchCameraBtn.addEventListener('click', switchCamera);
+clearGalleryBtn.addEventListener('click', clearGallery);
+
+// Funciones de la galería
+function addPhotoToGallery(imageDataURL) {
+    const photoId = Date.now(); // ID único basado en timestamp
+    const photoData = {
+        id: photoId,
+        dataURL: imageDataURL,
+        date: new Date().toLocaleString()
+    };
+    
+    photoStorage.push(photoData);
+    saveToLocalStorage();
+    renderGallery();
+    updatePhotoCount();
+    
+    console.log(`Foto agregada a la galería. Total: ${photoStorage.length} fotos`);
+}
+
+function renderGallery() {
+    gallery.innerHTML = '';
+    
+    photoStorage.forEach(photo => {
+        const galleryItem = document.createElement('div');
+        galleryItem.className = 'gallery-item';
+        galleryItem.innerHTML = `
+            <img src="${photo.dataURL}" alt="Foto ${photo.id}" onclick="viewFullPhoto('${photo.dataURL}')">
+            <button class="delete-btn" onclick="deletePhoto(${photo.id})" title="Eliminar foto">×</button>
+        `;
+        gallery.appendChild(galleryItem);
+    });
+}
+
+function deletePhoto(photoId) {
+    if (confirm('¿Estás seguro de que quieres eliminar esta foto?')) {
+        photoStorage = photoStorage.filter(photo => photo.id !== photoId);
+        saveToLocalStorage();
+        renderGallery();
+        updatePhotoCount();
+        console.log(`Foto ${photoId} eliminada`);
+    }
+}
+
+function clearGallery() {
+    if (photoStorage.length === 0) {
+        alert('La galería ya está vacía');
+        return;
+    }
+    
+    if (confirm(`¿Estás seguro de que quieres eliminar todas las ${photoStorage.length} fotos?`)) {
+        photoStorage = [];
+        saveToLocalStorage();
+        renderGallery();
+        updatePhotoCount();
+        console.log('Galería limpiada');
+    }
+}
+
+function viewFullPhoto(dataURL) {
+    const newWindow = window.open();
+    newWindow.document.write(`
+        <html>
+            <head><title>Foto - Cámara PWA</title></head>
+            <body style="margin:0; background:#000; display:flex; justify-content:center; align-items:center; min-height:100vh;">
+                <img src="${dataURL}" style="max-width:100%; max-height:100%; object-fit:contain;">
+            </body>
+        </html>
+    `);
+}
+
+function updatePhotoCount() {
+    photoCount.textContent = `${photoStorage.length} foto${photoStorage.length !== 1 ? 's' : ''} guardada${photoStorage.length !== 1 ? 's' : ''}`;
+}
+
+function saveToLocalStorage() {
+    try {
+        localStorage.setItem('cameraGallery', JSON.stringify(photoStorage));
+    } catch (error) {
+        console.error('Error al guardar en localStorage:', error);
+    }
+}
+
+function loadFromLocalStorage() {
+    try {
+        const saved = localStorage.getItem('cameraGallery');
+        if (saved) {
+            photoStorage = JSON.parse(saved);
+            renderGallery();
+            updatePhotoCount();
+            console.log(`Cargadas ${photoStorage.length} fotos desde localStorage`);
+        }
+    } catch (error) {
+        console.error('Error al cargar desde localStorage:', error);
+        photoStorage = [];
+    }
+}
+
+// Cargar fotos guardadas al iniciar
+window.addEventListener('load', () => {
+    loadFromLocalStorage();
+});
 
 window.addEventListener('beforeunload', () => {
     closeCamera();
